@@ -1,6 +1,6 @@
 import express from 'express';
-import pool from './db/database_es.js';
-import type { Expense, Group } from './types/types.js'
+import pool from './db/database_es.ts';
+import type { Expense, Group } from './types/types.ts'
 
 const app = express();
 app.use(express.json()); // parse into JSON
@@ -31,7 +31,7 @@ app.get('/', (req, res) => {
     res.send('Home Page')
 })
 
-// Expenses URL
+// Expenses
 app.get('/expense', async (req, res) => {
     try {
         // type of data to expect in each row.
@@ -135,6 +135,106 @@ app.delete('/expense/:id', async (req, res) => {
 
         res.status(500).json({
             error: 'Failed to delete expense.',
+        });
+    }
+})
+
+/*-------------------------------------------------------------------------------------------*/
+// Groups
+app.get('/group', async (req, res) => {
+    try {
+        const result = await pool.query<Group>(`
+            SELECT * FROM groups
+            ORDER BY groups.id
+        `)
+
+        res.status(200).json(result.rows);
+    } catch (error) {
+        console.error('Can not retrive groups table: ', error);
+
+        res.status(500).json({
+            error: 'Failed to retrive groups table.'
+        });
+    }
+});
+
+// Create a new group
+app.post('/group', async (req, res) => {
+    const { name } = req.body;
+
+    try {
+        const result = await pool.query<Expense>(`
+            INSERT INTO groups (name)
+            VALUES (${name})  
+            RETURNING *
+        `);
+
+        res.status(200).json(result.rows);
+    } catch (error) {
+        console.error('Can not create a new group: ', error);
+
+        res.status(500).json({
+            error: 'Failed to create a new group.'
+        });
+    }
+})
+
+// Update a group
+app.put('/group/:id', async (req, res) => {
+    const { name } = req.body;
+    const id = Number(req.params.id);
+
+    if (!Number.isInteger(id) || id <= 0) {
+        res.status(400).json({
+            error: 'Invalid group ID.',
+        });
+        return;
+    }
+
+    try {
+        const result = await pool.query<Expense>(
+            `
+            UPDATE groups
+            SET name = ${name}
+            WHERE id = ${id}
+            RETURNING *
+        `);
+
+        if (result.rows.length === 0) {
+            res.status(404).json({
+                error: 'Group not found.',
+            });
+            return;
+        }
+
+        res.status(200).json(result.rows[0]);
+    } catch (error) {
+        console.error('Cannot update group:', error);
+
+        res.status(500).json({
+            error: 'Failed to update group.',
+        });
+    }
+});
+
+// Delete a group
+app.delete('/expense/:id', async (req, res) => {
+    const id = Number(req.params.id);
+
+    try {
+        const result = await pool.query(`
+            DELETE FROM group
+            WHERE id = ${id}
+        `)
+
+        res.status(200).json({
+            message: 'Delete successfully.'
+        })
+    } catch (error) {
+        console.error('Cannot delete group:', error);
+
+        res.status(500).json({
+            error: 'Failed to delete group.',
         });
     }
 })

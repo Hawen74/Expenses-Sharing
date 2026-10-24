@@ -5,6 +5,12 @@ export type Group = {
     updated_at: Date;
 };
 
+export type Group_Member = {
+    group_id: number;
+    member_id: number;
+    joined_at: Date;
+}
+
 export type Expense = {
     id: number;
     group_id: number;
