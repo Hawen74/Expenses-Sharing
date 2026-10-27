@@ -11,6 +11,11 @@ export type Group_Member = {
     joined_at: Date;
 }
 
+export type Individual = {
+    name: string;
+    gender: 'male' | 'female';
+}
+
 export type Expense = {
     id: number;
     group_id: number;
